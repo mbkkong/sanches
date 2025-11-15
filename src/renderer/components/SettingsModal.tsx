@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Key, Bell, BellOff } from 'lucide-react';
+import { Settings, Key, Bell, BellOff, Trash2 } from 'lucide-react';
 import {
 	Dialog,
 	DialogContent,
@@ -16,6 +16,7 @@ interface SettingsModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onSave: (apiKey: string, notificationsEnabled: boolean) => Promise<void>;
+	onDeleteApiKey: () => Promise<void>;
 	currentApiKey?: string;
 	notificationsEnabled?: boolean;
 }
@@ -24,6 +25,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 	isOpen,
 	onClose,
 	onSave,
+	onDeleteApiKey,
 	currentApiKey,
 	notificationsEnabled = true,
 }) => {
@@ -31,12 +33,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 	const [notifications, setNotifications] = useState(true);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState('');
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
 	useEffect(() => {
 		if (isOpen) {
 			setApiKey(currentApiKey || '');
 			setNotifications(notificationsEnabled);
 			setError('');
+			setShowDeleteConfirm(false);
 		}
 	}, [isOpen, currentApiKey, notificationsEnabled]);
 
@@ -53,6 +57,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 			onClose();
 		} catch (err) {
 			setError('Failed to save settings');
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleDeleteApiKey = async () => {
+		setIsLoading(true);
+		setError('');
+		try {
+			await onDeleteApiKey();
+			setShowDeleteConfirm(false);
+			onClose();
+		} catch (err) {
+			setError('Failed to delete API key');
 		} finally {
 			setIsLoading(false);
 		}
@@ -135,22 +153,92 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 				</div>
 
 				<DialogFooter className="gap-2">
-					<Button 
-						variant="outline" 
-						onClick={onClose} 
-						disabled={isLoading}
-					>
-						Cancel
-					</Button>
-					<Button 
-						onClick={handleSave} 
-						disabled={isLoading}
-						variant="default"
-					>
-						{isLoading ? 'Saving...' : 'Save Settings'}
-					</Button>
+					<div className="flex items-center justify-between w-full">
+						<div className="flex-1">
+							{currentApiKey && (
+								<Button 
+									variant="destructive" 
+									onClick={() => setShowDeleteConfirm(true)} 
+									disabled={isLoading}
+									className="gap-2"
+								>
+									<Trash2 className="w-4 h-4" />
+									Delete API Key
+								</Button>
+							)}
+						</div>
+						<div className="flex gap-2">
+							<Button 
+								variant="outline" 
+								onClick={onClose} 
+								disabled={isLoading}
+							>
+								Cancel
+							</Button>
+							<Button 
+								onClick={handleSave} 
+								disabled={isLoading}
+								variant="default"
+							>
+								{isLoading ? 'Saving...' : 'Save Settings'}
+							</Button>
+						</div>
+					</div>
 				</DialogFooter>
 			</DialogContent>
+
+			{/* Confirmation Dialog */}
+			<Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+				<DialogContent className="sm:max-w-[450px] bg-white border-2 border-red-300 shadow-2xl">
+					<DialogHeader>
+						<div className="flex items-center gap-3 mb-2">
+							<div className="p-2.5 rounded-lg bg-red-500 shadow-lg">
+								<Trash2 className="w-6 h-6 text-white" />
+							</div>
+							<DialogTitle className="text-2xl font-bold text-slate-900">Delete API Key</DialogTitle>
+						</div>
+						<DialogDescription className="text-base text-slate-600">
+							Are you sure you want to delete your API key?
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="py-4">
+						<div className="p-4 bg-red-50 border-2 border-red-200 rounded-lg">
+							<p className="text-sm font-semibold text-red-900 mb-2">
+								⚠️ This action will:
+							</p>
+							<ul className="text-sm text-red-800 space-y-1 list-disc list-inside">
+								<li>Remove your Gemini API key</li>
+								<li>Delete all projects</li>
+								<li>Reset all settings to default</li>
+								<li>Clear all scan results</li>
+							</ul>
+							<p className="text-sm font-semibold text-red-900 mt-3">
+								This action cannot be undone!
+							</p>
+						</div>
+					</div>
+
+					<DialogFooter className="gap-2">
+						<Button 
+							variant="outline" 
+							onClick={() => setShowDeleteConfirm(false)} 
+							disabled={isLoading}
+						>
+							Cancel
+						</Button>
+						<Button 
+							variant="destructive" 
+							onClick={handleDeleteApiKey} 
+							disabled={isLoading}
+							className="gap-2"
+						>
+							<Trash2 className="w-4 h-4" />
+							{isLoading ? 'Deleting...' : 'Yes, Delete Everything'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</Dialog>
 	);
 };

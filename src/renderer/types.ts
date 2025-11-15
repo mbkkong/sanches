@@ -6,7 +6,7 @@ export interface Project {
 }
 
 export interface ScanResult {
-	pwd: string;
+	directory: string;
 	critical: SecurityIssue[];
 	warning: SecurityIssue[];
 	dependencies: DependencyIssue[];

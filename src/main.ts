@@ -437,6 +437,39 @@ ipcMain.handle('save-api-key', async (_event, apiKey: string) => {
 	return { success: true };
 });
 
+ipcMain.handle('delete-api-key', async () => {
+	// Delete API key
+	(store as any).delete('geminiApiKey');
+	
+	// Delete all projects
+	(store as any).delete('projects');
+	(store as any).delete('activeProjectId');
+	
+	// Reset settings to default
+	(store as any).set('settings', {
+		notifications: true,
+		sound: true,
+		startup: false,
+	});
+	
+	// Reset global watch to true (default)
+	(store as any).set('globalWatchEnabled', true);
+	
+	// Stop scanning
+	if (scanInterval) {
+		clearInterval(scanInterval);
+		scanInterval = null;
+	}
+	
+	// Clear scan results in UI
+	mainWindow?.webContents.send('scan-result', null);
+	
+	// Reset tray icon
+	updateTrayIcon(false);
+	
+	return { success: true };
+});
+
 // Run Sanches CLI and get security scan results
 async function runSanchesScan(): Promise<any> {
 	try {
@@ -461,7 +494,7 @@ async function runSanchesScan(): Promise<any> {
 			return null;
 		}
 		
-		const sanchesPath = path.join(__dirname, '../sanches');
+		const sanchesPath = path.join(__dirname, '../cli/sanches.py');
 		const projectPath = activeProject?.path || process.cwd();
 		
 		// Execute Sanches CLI with --dir and --api flags

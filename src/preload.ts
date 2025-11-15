@@ -31,6 +31,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 	saveApiKey: (apiKey: string) => ipcRenderer.invoke('save-api-key', apiKey),
 
+	deleteApiKey: () => ipcRenderer.invoke('delete-api-key'),
+
 	onNotificationSent: (callback: (data: any) => void) => {
 		ipcRenderer.on('notification-sent', (_event, data) => callback(data));
 	},
@@ -55,6 +57,7 @@ export interface ElectronAPI {
 	toggleProjectWatch: (projectId: string, enabled: boolean) => Promise<any>;
 	getApiKey: () => Promise<string | undefined>;
 	saveApiKey: (apiKey: string) => Promise<{ success: boolean }>;
+	deleteApiKey: () => Promise<{ success: boolean }>;
 	onNotificationSent: (callback: (data: any) => void) => void;
 	onScanResult: (callback: (data: any) => void) => void;
 }

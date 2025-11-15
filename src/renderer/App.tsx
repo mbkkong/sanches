@@ -27,6 +27,7 @@ export const App: React.FC = () => {
 		runScan,
 		loadProjects,
 		saveApiKey,
+		deleteApiKey,
 	} = useElectron();
 
 	const [lastScanTime, setLastScanTime] = useState('--:--:--');
@@ -118,6 +119,7 @@ export const App: React.FC = () => {
 				isOpen={isSettingsOpen}
 				onClose={() => setIsSettingsOpen(false)}
 				onSave={saveApiKey}
+				onDeleteApiKey={deleteApiKey}
 				currentApiKey={apiKey}
 				notificationsEnabled={notificationsEnabled}
 			/>

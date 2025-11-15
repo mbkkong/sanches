@@ -12,6 +12,7 @@ interface ElectronAPI {
 	toggleProjectWatch: (projectId: string, enabled: boolean) => Promise<{ success: boolean }>;
 	getApiKey: () => Promise<string | undefined>;
 	saveApiKey: (apiKey: string) => Promise<{ success: boolean }>;
+	deleteApiKey: () => Promise<{ success: boolean }>;
 	getSettings: () => Promise<{ notifications: boolean; sound: boolean; startup: boolean }>;
 	saveSettings: (settings: { notifications: boolean; sound: boolean; startup: boolean }) => Promise<{ success: boolean }>;
 	onScanResult: (callback: (data: ScanResult) => void) => void;
@@ -63,6 +64,17 @@ export const useElectron = () => {
 			notifications,
 		});
 		setNotificationsEnabled(notifications);
+	}, []);
+
+	const deleteApiKey = useCallback(async () => {
+		await window.electronAPI.deleteApiKey();
+		// Reset all state to initial values
+		setApiKey(undefined);
+		setProjects([]);
+		setActiveProjectId(undefined);
+		setScanResult(null);
+		setGlobalWatchEnabled(true);
+		setNotificationsEnabled(true);
 	}, []);
 
 	const runScan = useCallback(async () => {
@@ -130,6 +142,7 @@ export const useElectron = () => {
 		runScan,
 		loadProjects,
 		saveApiKey,
+		deleteApiKey,
 	};
 };
 

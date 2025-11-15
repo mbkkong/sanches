@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """
 Sanches - A coding assist tool that reads files and sends them to Gemini API
 """
@@ -6,7 +7,7 @@ import argparse
 import json
 import os
 import pathlib
-from typing import Dict
+from typing import Dict, Optional
 import pathspec
 from google import genai
 # from google.genai import types
@@ -77,8 +78,57 @@ class Sanches:
 
         return files_content
 
-    def send_to_gemini(self, files_content: Dict[str, str]) -> str | None:
+    def send_to_gemini(self, files_content: Dict[str, str]) -> Optional[str]:
         """Send file contents to Gemini and get JSON response"""
+        
+        # Define the JSON schema for structured output
+        response_schema = {
+            "type": "object",
+            "properties": {
+                "directory": {
+                    "type": "string",
+                    "description": "The project root path"
+                },
+                "critical": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "file_name": {"type": "string"},
+                            "file_path": {"type": "string"},
+                            "description": {"type": "string"}
+                        },
+                        "required": ["file_name", "file_path", "description"]
+                    }
+                },
+                "warning": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "file_name": {"type": "string"},
+                            "file_path": {"type": "string"},
+                            "description": {"type": "string"}
+                        },
+                        "required": ["file_name", "file_path", "description"]
+                    }
+                },
+                "suggestion": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "file_name": {"type": "string"},
+                            "file_path": {"type": "string"},
+                            "description": {"type": "string"}
+                        },
+                        "required": ["file_name", "file_path", "description"]
+                    }
+                }
+            },
+            "required": ["directory", "critical", "warning", "suggestion"]
+        }
+        
         prompt = f"""
         You are an experienced application security engineer and static analysis expert.
 
@@ -171,57 +221,6 @@ class Sanches:
         If you are unsure between levels, choose the LOWER severity (e.g., prefer "warning" over "critical", "suggestion" over "warning") and clearly explain your reasoning in the description.
 
         -----------------------------
-        INPUT FORMAT
-        -----------------------------
-        You will receive:
-
-        - A string representing the project root path (pwd).
-        - A list of files, where for each file you are given at least:
-        - full file path relative to or under pwd
-        - file name
-        - full file content
-
-        Assume that all files and their contents in the input are part of the same project rooted at "pwd".
-
-        -----------------------------
-        OUTPUT FORMAT (VERY IMPORTANT)
-        -----------------------------
-        You MUST output VALID JSON ONLY with the following exact structure:
-
-        {{
-        "pwd": "the user provided project root path as a string",
-        "critical": [
-            {{
-            "file_name": "file name only, e.g. \"app.py\"",
-            "file_path": "full path from project root, e.g. \"/src/app.py\"",
-            "description": "clear, concise explanation of the critical issue and why it is dangerous"
-            }}
-        ],
-        "warning": [
-            {{
-            "file_name": "file name only",
-            "file_path": "full file path from project root",
-            "description": "clear, concise explanation of the warning-level issue and why it matters"
-            }}
-        ],
-        "suggestion": [
-            {{
-            "file_name": "file name only",
-            "file_path": "full file path from project root",
-            "description": "clear, concise explanation of the suggested improvement or hardening step"
-            }}
-        ]
-        }}
-
-        Rules:
-        - All four top-level keys ("pwd", "critical", "warning", "suggestion", "dependencies") MUST be present.
-        - If there are no findings for a category, return an empty array for that category, e.g. "critical": [].
-        - "pwd" MUST match exactly the project root path string provided in the input.
-        - Do NOT include any fields other than those specified.
-        - Do NOT include comments or trailing commas.
-        - Do NOT add explanatory text outside of the JSON.
-
-        -----------------------------
         APPROACH & STYLE
         -----------------------------
         For each issue you report:
@@ -244,10 +243,17 @@ class Sanches:
         """
 
         # response = self.model.generate_content(prompt)
-        response = self.client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+        response = self.client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config={
+                'response_mime_type': 'application/json',
+                'response_schema': response_schema
+            }
+        )
         return response.text
 
-    def process(self, path: str) -> str | None:
+    def process(self, path: str) -> Optional[str]:
         """Main processing function"""
         files_content = self.read_files(path)
         response = self.send_to_gemini(files_content)
@@ -256,7 +262,7 @@ class Sanches:
 
 def main():
     parser = argparse.ArgumentParser(description='Sanches - Coding assist tool')
-    parser.add_argument('path', help='Path to file or directory to analyze')
+    parser.add_argument('--dir', required=True, help='Path to file or directory to analyze')
     parser.add_argument('--api-key', help='Gemini API key (or set GEMINI_API_KEY env var)')
 
     args = parser.parse_args()
@@ -268,7 +274,7 @@ def main():
 
     try:
         sanches = Sanches(api_key)
-        result = sanches.process(args.path)
+        result = sanches.process(args.dir)
         print(result)
         return 0
     except Exception as e:

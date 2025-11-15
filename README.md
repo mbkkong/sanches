@@ -1,5 +1,5 @@
-# Sanches - Real-Time App
+# Sanches - Real-Time Security
 
 A modern Electron application built with TypeScript that provides real-time notification for your security issues via WebSocket connections.
 
-It consumes `sanches-cli` at the backend.
+Consumes `sanches-cli`.

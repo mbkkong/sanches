@@ -43,6 +43,15 @@ class Sanches:
             'target', 'bin', 'obj',
         }
 
+        # Dependency files to ignore (handled by NVD API separately)
+        dependency_files = {
+            'package.json', 'package-lock.json', 'yarn.lock',
+            'requirements.txt', 'Pipfile', 'Pipfile.lock',
+            'poetry.lock', 'composer.json', 'composer.lock',
+            'Gemfile', 'Gemfile.lock', 'go.mod', 'go.sum',
+            'pom.xml', 'build.gradle', 'build.gradle.kts'
+        }
+
         # TODO: get Claude to also explicitly ignore .env files
 
         # Load .gitignore patterns if it exists
@@ -54,11 +63,15 @@ class Sanches:
             spec = pathspec.PathSpec.from_lines('gitwildmatch', patterns)
 
         def should_ignore(file_path: pathlib.Path) -> bool:
-            """Check if file should be ignored based on .gitignore rules or dependency directories"""
+            """Check if file should be ignored based on .gitignore rules, dependency directories, or dependency files"""
             # Check if any part of the path is a known dependency directory
             for part in file_path.parts:
                 if part in dependency_dirs:
                     return True
+            
+            # Check if the filename is a dependency file
+            if file_path.name in dependency_files:
+                return True
 
             if spec is None:
                 return False
@@ -70,8 +83,9 @@ class Sanches:
                 return False
 
         if path_obj.is_file():
-            with open(path_obj, 'r', encoding='utf-8') as f:
-                files_content[str(path_obj)] = f.read()
+            if not should_ignore(path_obj):
+                with open(path_obj, 'r', encoding='utf-8') as f:
+                    files_content[str(path_obj)] = f.read()
         else:
             for file_path in path_obj.rglob('*'):
                 if file_path.is_file() and not should_ignore(file_path):

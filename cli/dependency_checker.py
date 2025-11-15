@@ -102,8 +102,7 @@ class DependencyChecker:
                             'file': str(file_path)
                         })
             return deps
-        except Exception as e:
-            print(f"Error parsing {file_path}: {e}")
+        except Exception:
             return []
 
     def _parse_requirements_txt(self, file_path: Path) -> List[Dict[str, Any]]:
@@ -137,8 +136,7 @@ class DependencyChecker:
                                 'file': str(file_path)
                             })
             return deps
-        except Exception as e:
-            print(f"Error parsing {file_path}: {e}")
+        except Exception:
             return []
 
     def _parse_pyproject_toml(self, file_path: Path) -> List[Dict[str, Any]]:
@@ -149,7 +147,6 @@ class DependencyChecker:
             try:
                 import tomli as tomllib
             except ImportError:
-                print("tomllib/tomli not available, skipping pyproject.toml parsing")
                 return []
 
         try:
@@ -170,8 +167,7 @@ class DependencyChecker:
                         })
 
             return deps
-        except Exception as e:
-            print(f"Error parsing {file_path}: {e}")
+        except Exception:
             return []
 
     def _parse_pipfile(self, file_path: Path) -> List[Dict[str, Any]]:
@@ -182,7 +178,6 @@ class DependencyChecker:
             try:
                 import tomli as tomllib
             except ImportError:
-                print("tomllib/tomli not available, skipping Pipfile parsing")
                 return []
 
         try:
@@ -207,8 +202,7 @@ class DependencyChecker:
                             'file': str(file_path)
                         })
             return deps
-        except Exception as e:
-            print(f"Error parsing {file_path}: {e}")
+        except Exception:
             return []
 
     def _parse_cargo_toml(self, file_path: Path) -> List[Dict[str, Any]]:
@@ -219,7 +213,6 @@ class DependencyChecker:
             try:
                 import tomli as tomllib
             except ImportError:
-                print("tomllib/tomli not available, skipping Cargo.toml parsing")
                 return []
 
         try:
@@ -244,8 +237,7 @@ class DependencyChecker:
                             'file': str(file_path)
                         })
             return deps
-        except Exception as e:
-            print(f"Error parsing {file_path}: {e}")
+        except Exception:
             return []
 
     def _parse_go_mod(self, file_path: Path) -> List[Dict[str, Any]]:
@@ -283,8 +275,7 @@ class DependencyChecker:
                 })
 
             return deps
-        except Exception as e:
-            print(f"Error parsing {file_path}: {e}")
+        except Exception:
             return []
 
     def _parse_pom_xml(self, file_path: Path) -> List[Dict[str, Any]]:
@@ -321,8 +312,7 @@ class DependencyChecker:
                     })
 
             return deps
-        except Exception as e:
-            print(f"Error parsing {file_path}: {e}")
+        except Exception:
             return []
 
     def _parse_csproj(self, file_path: Path) -> List[Dict[str, Any]]:
@@ -349,8 +339,7 @@ class DependencyChecker:
                     })
 
             return deps
-        except Exception as e:
-            print(f"Error parsing {file_path}: {e}")
+        except Exception:
             return []
 
     def _clean_version(self, version: str) -> str:
@@ -364,7 +353,6 @@ class DependencyChecker:
     def _check_vulnerability(self, dependency: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Check a dependency for vulnerabilities using NVD API"""
         if not self.nvd_api_key:
-            print("Warning: NVD API key not provided, skipping vulnerability check")
             return []
 
         try:
@@ -425,14 +413,9 @@ class DependencyChecker:
 
                 return vulnerabilities
             else:
-                # 404 means no CVE data found, which is expected and not an error
-                # Only log actual errors (5xx, 401, 403, etc.)
-                if response.status_code >= 500 or response.status_code in [401, 403]:
-                    print(f"Error querying NVD API: {response.status_code}")
                 return []
 
-        except Exception as e:
-            print(f"Error checking vulnerability for {dependency['name']}: {e}")
+        except Exception:
             return []
 
 

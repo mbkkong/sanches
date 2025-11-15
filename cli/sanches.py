@@ -269,8 +269,7 @@ class Sanches:
                 })
             
             return formatted_deps
-        except Exception as e:
-            print(f"Warning: Error checking dependencies: {e}", flush=True)
+        except Exception:
             return []
 
     def process(self, path: str) -> Optional[str]:

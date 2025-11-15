@@ -76,8 +76,8 @@ export const App: React.FC = () => {
 				hasProjects={hasProjects}
 			/>
 
-			<main className="flex-1 overflow-hidden">
-				<div className="px-6 py-6 h-full flex flex-col gap-6">
+			<main className="flex-1 overflow-hidden min-h-0">
+				<div className="px-6 py-6 h-full flex flex-col gap-6 min-h-0">
 					{!hasApiKey && (
 						<div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 flex items-center gap-3">
 							<AlertCircle className="w-6 h-6 text-yellow-600 shrink-0" />

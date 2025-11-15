@@ -377,7 +377,7 @@ ipcMain.handle('delete-project', async (_event, projectId: string) => {
 			}
 		} else {
 			// No projects left, clear active project and send empty scan result
-			(store as any).set('activeProjectId', undefined);
+			(store as any).delete('activeProjectId');
 			mainWindow?.webContents.send('scan-result', null);
 		}
 	}

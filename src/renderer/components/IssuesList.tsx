@@ -157,8 +157,8 @@ export const IssuesList: React.FC<IssuesListProps> = ({ issues, dependencies }) 
 	const hasRelevantIssues = criticalCount > 0 || warningCount > 0;
 
 	return (
-		<div className="flex-1 overflow-hidden flex flex-col animate-fade-in">
-			<Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)} className="flex-1 flex flex-col">
+		<div className="flex-1 overflow-hidden flex flex-col animate-fade-in min-h-0">
+			<Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)} className="flex-1 flex flex-col min-h-0">
 				<div className="flex items-center justify-between mb-4">
 					<div className="flex items-center gap-2">
 						<h2 className="text-lg font-semibold text-slate-900">Issues</h2>
@@ -222,8 +222,8 @@ export const IssuesList: React.FC<IssuesListProps> = ({ issues, dependencies }) 
 
 				<Separator className="mb-4" />
 
-				<TabsContent value={filter} className="flex-1 mt-0 flex flex-col">
-					<ScrollArea className="flex-1 pr-4">
+				<TabsContent value={filter} className="flex-1 mt-0 flex flex-col min-h-0">
+					<ScrollArea className="flex-1 pr-4 h-full">
 						{paginatedIssues.length === 0 && paginatedDeps.length === 0 ? (
 							<Card className="border-dashed border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-white shadow-sm">
 								<CardContent className="flex flex-col items-center justify-center py-20">

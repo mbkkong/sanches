@@ -47,6 +47,12 @@ export const App: React.FC = () => {
 	const issuesWithType: IssueWithType[] = [
 		...(scanResult?.critical.map((issue) => ({ ...issue, type: 'critical' as const })) || []),
 		...(scanResult?.warning.map((issue) => ({ ...issue, type: 'warning' as const })) || []),
+		...(scanResult?.dependencies.map((issue) => ({ 
+			...issue, 
+			type: 'dependencies' as const,
+			file: `${issue.package_type}: ${issue.package}`,
+			file_name: issue.package
+		})) || []),
 	];
 
 	const handleAddProject = async (path: string) => {
@@ -100,6 +106,7 @@ export const App: React.FC = () => {
 					<StatsCards
 						criticalCount={scanResult?.critical.length || 0}
 						warningCount={scanResult?.warning.length || 0}
+						dependenciesCount={scanResult?.dependencies.length || 0}
 					/>
 
 					<ProjectSelector

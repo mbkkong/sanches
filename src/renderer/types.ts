@@ -29,5 +29,3 @@ export type IssueType = 'critical' | 'warning' | 'dependencies';
 export interface IssueWithType extends SecurityIssue {
 	type: IssueType;
 }
-
-

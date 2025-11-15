@@ -129,11 +129,14 @@ export const IssuesList: React.FC<IssuesListProps> = ({ issues }) => {
 				return <AlertCircle className="w-3.5 h-3.5 text-red-600" />;
 			case 'warning':
 				return <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />;
+			case 'dependencies':
+				return <FileText className="w-3.5 h-3.5 text-blue-600" />;
 		}
 	};
 
 	const criticalCount = issues.filter((i) => i.type === 'critical').length;
 	const warningCount = issues.filter((i) => i.type === 'warning').length;
+	const dependenciesCount = issues.filter((i) => i.type === 'dependencies').length;
 	const hasRelevantIssues = criticalCount > 0 || warningCount > 0;
 
 	return (
@@ -178,6 +181,9 @@ export const IssuesList: React.FC<IssuesListProps> = ({ issues }) => {
 							</TabsTrigger>
 							<TabsTrigger value="warning" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium text-[11px] px-2 py-1">
 								Warnings {warningCount > 0 && <Badge className="ml-1 text-[9px] bg-amber-100 text-amber-700 border-amber-200 px-1 py-0">{warningCount}</Badge>}
+							</TabsTrigger>
+							<TabsTrigger value="dependencies" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium text-[11px] px-2 py-1">
+								Dependencies {dependenciesCount > 0 && <Badge className="ml-1 text-[9px] bg-blue-100 text-blue-700 border-blue-200 px-1 py-0">{dependenciesCount}</Badge>}
 							</TabsTrigger>
 						</TabsList>
 					</div>

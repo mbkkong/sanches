@@ -8,6 +8,12 @@ import { promisify } from 'node:util';
 const execAsync = promisify(exec);
 
 // Define store type
+interface Project {
+	id: string;
+	name: string;
+	path: string;
+}
+
 interface StoreType {
 	settings?: {
 		notifications: boolean;
@@ -15,6 +21,8 @@ interface StoreType {
 		startup: boolean;
 	};
 	notificationInterval?: number;
+	projects?: Project[];
+	activeProjectId?: string;
 }
 
 // Initialize electron-store for persisting settings
@@ -229,16 +237,73 @@ ipcMain.handle('run-scan', async () => {
 	return result;
 });
 
+ipcMain.handle('get-projects', async () => {
+	const projects = (store as any).get('projects', []) as Project[];
+	const activeProjectId = (store as any).get('activeProjectId') as string | undefined;
+	return { projects, activeProjectId };
+});
+
+ipcMain.handle('add-project', async (_event, project: Omit<Project, 'id'>) => {
+	const projects = (store as any).get('projects', []) as Project[];
+	const newProject: Project = {
+		...project,
+		id: Date.now().toString(),
+	};
+	projects.push(newProject);
+	(store as any).set('projects', projects);
+	
+	// Set as active if it's the first project
+	if (projects.length === 1) {
+		(store as any).set('activeProjectId', newProject.id);
+	}
+	
+	return newProject;
+});
+
+ipcMain.handle('delete-project', async (_event, projectId: string) => {
+	const projects = (store as any).get('projects', []) as Project[];
+	const filtered = projects.filter(p => p.id !== projectId);
+	(store as any).set('projects', filtered);
+	
+	// If deleted project was active, set first project as active
+	const activeProjectId = (store as any).get('activeProjectId') as string;
+	if (activeProjectId === projectId && filtered.length > 0) {
+		(store as any).set('activeProjectId', filtered[0].id);
+	}
+	
+	return { success: true };
+});
+
+ipcMain.handle('set-active-project', async (_event, projectId: string) => {
+	(store as any).set('activeProjectId', projectId);
+	
+	// Run a scan immediately after switching projects
+	const result = await runSanchesScan();
+	if (result) {
+		mainWindow?.webContents.send('scan-result', result);
+	}
+	
+	return { success: true };
+});
+
 // Run Sanches CLI and get security scan results
 async function runSanchesScan(): Promise<any> {
 	try {
+		const activeProjectId = (store as any).get('activeProjectId') as string;
+		const projects = ((store as any).get('projects', []) as Project[]);
+		const activeProject = projects.find(p => p.id === activeProjectId);
+		
 		const sanchesPath = path.join(__dirname, '../sanches');
-		const { stdout, stderr } = await execAsync(sanchesPath);
-
+		const projectPath = activeProject?.path || process.cwd();
+		
+		const { stdout, stderr } = await execAsync(sanchesPath, {
+			cwd: projectPath
+		});
+		
 		if (stderr) {
 			console.error('Sanches CLI error:', stderr);
 		}
-
+		
 		const result = JSON.parse(stdout);
 		return result;
 	} catch (error) {

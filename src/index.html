@@ -151,11 +151,19 @@
           </div>
         </div>
 
-        <!-- Working Directory -->
+        <!-- Project Selector -->
         <div class="bg-cyber-surface/50 backdrop-blur-sm border border-cyber-accent/20 rounded-lg p-2">
           <div class="flex items-center gap-2">
             <span class="text-cyber-accent/60 text-xs">📂</span>
-            <code class="text-cyber-accent text-xs font-mono truncate" id="workingDir">...</code>
+            <select id="projectSelector" class="flex-1 bg-transparent text-cyber-accent text-xs font-mono border-none outline-none cursor-pointer">
+              <option value="">No project selected</option>
+            </select>
+            <button id="addProjectBtn" class="px-2 py-0.5 bg-cyber-accent/10 hover:bg-cyber-accent/20 border border-cyber-accent/30 rounded text-cyber-accent text-xs" title="Add project">
+              +
+            </button>
+            <button id="manageProjectsBtn" class="px-2 py-0.5 bg-cyber-accent/10 hover:bg-cyber-accent/20 border border-cyber-accent/30 rounded text-cyber-accent text-xs" title="Manage projects">
+              ⚙️
+            </button>
           </div>
         </div>
 
@@ -184,6 +192,44 @@
     </main>
   </div>
 
+  <!-- Add Project Modal -->
+  <div id="addProjectModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-cyber-surface border border-cyber-accent/30 rounded-lg p-4 w-80">
+      <h3 class="text-lg font-bold text-cyber-accent mb-3">Add Project</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs text-cyber-text/60 block mb-1">Project Name</label>
+          <input type="text" id="projectName" class="w-full bg-cyber-bg border border-cyber-accent/30 rounded px-2 py-1.5 text-sm text-cyber-text outline-none focus:border-cyber-accent" placeholder="My Project">
+        </div>
+        <div>
+          <label class="text-xs text-cyber-text/60 block mb-1">Project Path</label>
+          <input type="text" id="projectPath" class="w-full bg-cyber-bg border border-cyber-accent/30 rounded px-2 py-1.5 text-sm text-cyber-text font-mono outline-none focus:border-cyber-accent" placeholder="/path/to/project">
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button id="saveProjectBtn" class="flex-1 px-3 py-1.5 bg-cyber-accent/20 border border-cyber-accent rounded hover:bg-cyber-accent/30 text-cyber-accent text-sm font-semibold">
+            Save
+          </button>
+          <button id="cancelProjectBtn" class="flex-1 px-3 py-1.5 bg-cyber-surface border border-cyber-text/20 rounded hover:bg-cyber-text/10 text-cyber-text text-sm">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Projects Modal -->
+  <div id="manageProjectsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-cyber-surface border border-cyber-accent/30 rounded-lg p-4 w-96">
+      <h3 class="text-lg font-bold text-cyber-accent mb-3">Manage Projects</h3>
+      <div id="projectsList" class="space-y-2 max-h-64 overflow-y-auto mb-4">
+        <!-- Projects will be listed here -->
+      </div>
+      <button id="closeManageProjectsBtn" class="w-full px-3 py-1.5 bg-cyber-surface border border-cyber-text/20 rounded hover:bg-cyber-text/10 text-cyber-text text-sm">
+        Close
+      </button>
+    </div>
+  </div>
+
   <script>
     let currentFilter = 'all';
     let latestScanData = null;
@@ -192,9 +238,19 @@
     const warningCountEl = document.getElementById('warningCount');
     const depsCountEl = document.getElementById('depsCount');
     const lastScanEl = document.getElementById('lastScan');
-    const workingDirEl = document.getElementById('workingDir');
     const issuesContainerEl = document.getElementById('issuesContainer');
     const runScanBtn = document.getElementById('runScanBtn');
+    const projectSelector = document.getElementById('projectSelector');
+    const addProjectBtn = document.getElementById('addProjectBtn');
+    const manageProjectsBtn = document.getElementById('manageProjectsBtn');
+    const addProjectModal = document.getElementById('addProjectModal');
+    const manageProjectsModal = document.getElementById('manageProjectsModal');
+    const projectNameInput = document.getElementById('projectName');
+    const projectPathInput = document.getElementById('projectPath');
+    const saveProjectBtn = document.getElementById('saveProjectBtn');
+    const cancelProjectBtn = document.getElementById('cancelProjectBtn');
+    const closeManageProjectsBtn = document.getElementById('closeManageProjectsBtn');
+    const projectsList = document.getElementById('projectsList');
 
     // Filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -347,6 +403,104 @@
       }).join('');
     }
 
+    // Load projects
+    async function loadProjects() {
+      const { projects, activeProjectId } = await window.electronAPI.getProjects();
+      
+      projectSelector.innerHTML = projects.length === 0 
+        ? '<option value="">No projects - Click + to add</option>'
+        : '';
+      
+      projects.forEach(project => {
+        const option = document.createElement('option');
+        option.value = project.id;
+        option.textContent = `${project.name} (${project.path})`;
+        if (project.id === activeProjectId) {
+          option.selected = true;
+        }
+        projectSelector.appendChild(option);
+      });
+    }
+
+    // Project selector change
+    projectSelector.addEventListener('change', async (e) => {
+      const projectId = e.target.value;
+      if (projectId) {
+        await window.electronAPI.setActiveProject(projectId);
+      }
+    });
+
+    // Add project modal
+    addProjectBtn.addEventListener('click', () => {
+      addProjectModal.classList.remove('hidden');
+      projectNameInput.value = '';
+      projectPathInput.value = '';
+      projectNameInput.focus();
+    });
+
+    cancelProjectBtn.addEventListener('click', () => {
+      addProjectModal.classList.add('hidden');
+    });
+
+    saveProjectBtn.addEventListener('click', async () => {
+      const name = projectNameInput.value.trim();
+      const path = projectPathInput.value.trim();
+      
+      if (!name || !path) {
+        alert('Please fill in both fields');
+        return;
+      }
+      
+      await window.electronAPI.addProject({ name, path });
+      await loadProjects();
+      addProjectModal.classList.add('hidden');
+      
+      // Run scan for new project
+      const result = await window.electronAPI.runScan();
+      if (result) {
+        handleScanResult(result);
+      }
+    });
+
+    // Manage projects modal
+    manageProjectsBtn.addEventListener('click', async () => {
+      await renderProjectsList();
+      manageProjectsModal.classList.remove('hidden');
+    });
+
+    closeManageProjectsBtn.addEventListener('click', () => {
+      manageProjectsModal.classList.add('hidden');
+    });
+
+    async function renderProjectsList() {
+      const { projects, activeProjectId } = await window.electronAPI.getProjects();
+      
+      if (projects.length === 0) {
+        projectsList.innerHTML = '<p class="text-cyber-text/60 text-sm text-center py-4">No projects yet</p>';
+        return;
+      }
+      
+      projectsList.innerHTML = projects.map(project => `
+        <div class="bg-cyber-bg border ${project.id === activeProjectId ? 'border-cyber-accent' : 'border-cyber-text/20'} rounded p-2 flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold ${project.id === activeProjectId ? 'text-cyber-accent' : 'text-cyber-text'}">${escapeHtml(project.name)}</p>
+            <p class="text-xs text-cyber-text/60 font-mono truncate">${escapeHtml(project.path)}</p>
+          </div>
+          <button onclick="deleteProject('${project.id}')" class="ml-2 px-2 py-1 bg-cyber-danger/20 border border-cyber-danger/30 rounded text-cyber-danger text-xs hover:bg-cyber-danger/30">
+            Delete
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function deleteProject(projectId) {
+      if (confirm('Are you sure you want to delete this project?')) {
+        await window.electronAPI.deleteProject(projectId);
+        await loadProjects();
+        await renderProjectsList();
+      }
+    }
+
     // Handle scan result
     function handleScanResult(data) {
       // Update counts
@@ -358,11 +512,6 @@
       const now = new Date();
       lastScanEl.textContent = now.toLocaleTimeString();
       
-      // Update working directory
-      if (data.pwd) {
-        workingDirEl.textContent = data.pwd;
-      }
-      
       // Render issues
       renderIssues(data);
     }
@@ -373,8 +522,10 @@
       handleScanResult(data);
     });
 
-    // Request initial scan
+    // Initialize
     setTimeout(async () => {
+      await loadProjects();
+      
       const result = await window.electronAPI.runScan();
       if (result) {
         handleScanResult(result);

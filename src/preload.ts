@@ -12,6 +12,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 	runScan: () => ipcRenderer.invoke('run-scan'),
 
+	getProjects: () => ipcRenderer.invoke('get-projects'),
+
+	addProject: (project: any) => ipcRenderer.invoke('add-project', project),
+
+	deleteProject: (projectId: string) => ipcRenderer.invoke('delete-project', projectId),
+
+	setActiveProject: (projectId: string) => ipcRenderer.invoke('set-active-project', projectId),
+
 	onNotificationSent: (callback: (data: any) => void) => {
 		ipcRenderer.on('notification-sent', (_event, data) => callback(data));
 	},
@@ -27,6 +35,10 @@ export interface ElectronAPI {
 	getSettings: () => Promise<any>;
 	saveSettings: (settings: any) => Promise<{ success: boolean }>;
 	runScan: () => Promise<any>;
+	getProjects: () => Promise<any>;
+	addProject: (project: any) => Promise<any>;
+	deleteProject: (projectId: string) => Promise<any>;
+	setActiveProject: (projectId: string) => Promise<any>;
 	onNotificationSent: (callback: (data: any) => void) => void;
 	onScanResult: (callback: (data: any) => void) => void;
 }

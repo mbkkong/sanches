@@ -20,6 +20,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 	setActiveProject: (projectId: string) => ipcRenderer.invoke('set-active-project', projectId),
 
+	getGlobalWatch: () => ipcRenderer.invoke('get-global-watch'),
+
+	setGlobalWatch: (enabled: boolean) => ipcRenderer.invoke('set-global-watch', enabled),
+
+	toggleProjectWatch: (projectId: string, enabled: boolean) => 
+		ipcRenderer.invoke('toggle-project-watch', projectId, enabled),
+
 	onNotificationSent: (callback: (data: any) => void) => {
 		ipcRenderer.on('notification-sent', (_event, data) => callback(data));
 	},
@@ -39,6 +46,9 @@ export interface ElectronAPI {
 	addProject: (project: any) => Promise<any>;
 	deleteProject: (projectId: string) => Promise<any>;
 	setActiveProject: (projectId: string) => Promise<any>;
+	getGlobalWatch: () => Promise<boolean>;
+	setGlobalWatch: (enabled: boolean) => Promise<any>;
+	toggleProjectWatch: (projectId: string, enabled: boolean) => Promise<any>;
 	onNotificationSent: (callback: (data: any) => void) => void;
 	onScanResult: (callback: (data: any) => void) => void;
 }

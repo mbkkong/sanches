@@ -112,11 +112,15 @@
         
         <div class="flex items-center gap-2 text-xs">
           <div class="flex items-center gap-1">
-            <div class="w-1.5 h-1.5 bg-cyber-accent rounded-full card-glow"></div>
-            <span class="text-cyber-text/80">Active</span>
+            <div class="w-1.5 h-1.5 bg-cyber-accent rounded-full card-glow" id="watchIndicator"></div>
+            <span class="text-cyber-text/80" id="watchStatusText">Active</span>
           </div>
           <span class="text-cyber-text/40">•</span>
           <span class="text-cyber-text/60" id="lastScan">--:--:--</span>
+          <span class="text-cyber-text/40">•</span>
+          <button id="globalWatchToggle" class="px-2 py-0.5 bg-cyber-accent/20 border border-cyber-accent/50 rounded hover:bg-cyber-accent/30 transition-all text-cyber-accent font-semibold">
+            Watch: ON
+          </button>
         </div>
       </div>
     </header>
@@ -251,6 +255,9 @@
     const cancelProjectBtn = document.getElementById('cancelProjectBtn');
     const closeManageProjectsBtn = document.getElementById('closeManageProjectsBtn');
     const projectsList = document.getElementById('projectsList');
+    const globalWatchToggle = document.getElementById('globalWatchToggle');
+    const watchIndicator = document.getElementById('watchIndicator');
+    const watchStatusText = document.getElementById('watchStatusText');
 
     // Filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -481,14 +488,29 @@
       }
       
       projectsList.innerHTML = projects.map(project => `
-        <div class="bg-cyber-bg border ${project.id === activeProjectId ? 'border-cyber-accent' : 'border-cyber-text/20'} rounded p-2 flex items-center justify-between">
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold ${project.id === activeProjectId ? 'text-cyber-accent' : 'text-cyber-text'}">${escapeHtml(project.name)}</p>
-            <p class="text-xs text-cyber-text/60 font-mono truncate">${escapeHtml(project.path)}</p>
+        <div class="bg-cyber-bg border ${project.id === activeProjectId ? 'border-cyber-accent' : 'border-cyber-text/20'} rounded p-2">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold ${project.id === activeProjectId ? 'text-cyber-accent' : 'text-cyber-text'}">${escapeHtml(project.name)}</p>
+              <p class="text-xs text-cyber-text/60 font-mono truncate">${escapeHtml(project.path)}</p>
+            </div>
+            <button onclick="deleteProject('${project.id}')" class="ml-2 px-2 py-1 bg-cyber-danger/20 border border-cyber-danger/30 rounded text-cyber-danger text-xs hover:bg-cyber-danger/30">
+              Delete
+            </button>
           </div>
-          <button onclick="deleteProject('${project.id}')" class="ml-2 px-2 py-1 bg-cyber-danger/20 border border-cyber-danger/30 rounded text-cyber-danger text-xs hover:bg-cyber-danger/30">
-            Delete
-          </button>
+          <div class="flex items-center gap-2">
+            <label class="flex items-center gap-2 cursor-pointer flex-1">
+              <input 
+                type="checkbox" 
+                ${project.watchEnabled ? 'checked' : ''} 
+                onchange="toggleProjectWatch('${project.id}', this.checked)"
+                class="w-4 h-4 bg-cyber-bg border border-cyber-accent/30 rounded checked:bg-cyber-accent cursor-pointer"
+              />
+              <span class="text-xs ${project.watchEnabled ? 'text-cyber-accent' : 'text-cyber-text/60'}">
+                Watch Enabled
+              </span>
+            </label>
+          </div>
         </div>
       `).join('');
     }
@@ -500,6 +522,40 @@
         await renderProjectsList();
       }
     }
+
+    async function toggleProjectWatch(projectId, enabled) {
+      await window.electronAPI.toggleProjectWatch(projectId, enabled);
+      await renderProjectsList();
+    }
+
+    // Global watch toggle
+    let globalWatchEnabled = true;
+    
+    async function updateGlobalWatchUI() {
+      globalWatchEnabled = await window.electronAPI.getGlobalWatch();
+      
+      if (globalWatchEnabled) {
+        globalWatchToggle.textContent = 'Watch: ON';
+        globalWatchToggle.classList.remove('bg-cyber-danger/20', 'border-cyber-danger/50');
+        globalWatchToggle.classList.add('bg-cyber-accent/20', 'border-cyber-accent/50');
+        watchIndicator.classList.remove('bg-cyber-danger');
+        watchIndicator.classList.add('bg-cyber-accent', 'card-glow');
+        watchStatusText.textContent = 'Active';
+      } else {
+        globalWatchToggle.textContent = 'Watch: OFF';
+        globalWatchToggle.classList.remove('bg-cyber-accent/20', 'border-cyber-accent/50');
+        globalWatchToggle.classList.add('bg-cyber-danger/20', 'border-cyber-danger/50');
+        watchIndicator.classList.remove('bg-cyber-accent', 'card-glow');
+        watchIndicator.classList.add('bg-cyber-danger');
+        watchStatusText.textContent = 'Stopped';
+      }
+    }
+
+    globalWatchToggle.addEventListener('click', async () => {
+      globalWatchEnabled = !globalWatchEnabled;
+      await window.electronAPI.setGlobalWatch(globalWatchEnabled);
+      await updateGlobalWatchUI();
+    });
 
     // Handle scan result
     function handleScanResult(data) {
@@ -524,6 +580,7 @@
 
     // Initialize
     setTimeout(async () => {
+      await updateGlobalWatchUI();
       await loadProjects();
       
       const result = await window.electronAPI.runScan();

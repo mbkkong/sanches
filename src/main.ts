@@ -12,6 +12,7 @@ interface Project {
 	id: string;
 	name: string;
 	path: string;
+	watchEnabled: boolean;
 }
 
 interface StoreType {
@@ -23,6 +24,7 @@ interface StoreType {
 	notificationInterval?: number;
 	projects?: Project[];
 	activeProjectId?: string;
+	globalWatchEnabled?: boolean;
 }
 
 // Initialize electron-store for persisting settings
@@ -243,11 +245,12 @@ ipcMain.handle('get-projects', async () => {
 	return { projects, activeProjectId };
 });
 
-ipcMain.handle('add-project', async (_event, project: Omit<Project, 'id'>) => {
+ipcMain.handle('add-project', async (_event, project: Omit<Project, 'id' | 'watchEnabled'>) => {
 	const projects = (store as any).get('projects', []) as Project[];
 	const newProject: Project = {
 		...project,
 		id: Date.now().toString(),
+		watchEnabled: true, // Enable watch by default
 	};
 	projects.push(newProject);
 	(store as any).set('projects', projects);
@@ -286,12 +289,53 @@ ipcMain.handle('set-active-project', async (_event, projectId: string) => {
 	return { success: true };
 });
 
+ipcMain.handle('get-global-watch', async () => {
+	return (store as any).get('globalWatchEnabled', true) as boolean;
+});
+
+ipcMain.handle('set-global-watch', async (_event, enabled: boolean) => {
+	(store as any).set('globalWatchEnabled', enabled);
+	
+	if (enabled) {
+		startSecurityScans();
+	} else {
+		if (scanInterval) {
+			clearInterval(scanInterval);
+			scanInterval = null;
+		}
+	}
+	
+	return { success: true };
+});
+
+ipcMain.handle('toggle-project-watch', async (_event, projectId: string, enabled: boolean) => {
+	const projects = (store as any).get('projects', []) as Project[];
+	const project = projects.find(p => p.id === projectId);
+	
+	if (project) {
+		project.watchEnabled = enabled;
+		(store as any).set('projects', projects);
+	}
+	
+	return { success: true };
+});
+
 // Run Sanches CLI and get security scan results
 async function runSanchesScan(): Promise<any> {
 	try {
+		const globalWatchEnabled = (store as any).get('globalWatchEnabled', true) as boolean;
+		if (!globalWatchEnabled) {
+			return null;
+		}
+		
 		const activeProjectId = (store as any).get('activeProjectId') as string;
 		const projects = ((store as any).get('projects', []) as Project[]);
 		const activeProject = projects.find(p => p.id === activeProjectId);
+		
+		// Check if project watch is enabled
+		if (!activeProject || !activeProject.watchEnabled) {
+			return null;
+		}
 		
 		const sanchesPath = path.join(__dirname, '../sanches');
 		const projectPath = activeProject?.path || process.cwd();
@@ -314,6 +358,17 @@ async function runSanchesScan(): Promise<any> {
 
 // Start periodic security scans
 function startSecurityScans(): void {
+	// Clear existing interval if any
+	if (scanInterval) {
+		clearInterval(scanInterval);
+		scanInterval = null;
+	}
+	
+	const globalWatchEnabled = (store as any).get('globalWatchEnabled', true) as boolean;
+	if (!globalWatchEnabled) {
+		return;
+	}
+	
 	// Run initial scan
 	runSanchesScan().then((result) => {
 		if (result) {
@@ -326,7 +381,7 @@ function startSecurityScans(): void {
 		const result = await runSanchesScan();
 		if (result) {
 			mainWindow?.webContents.send('scan-result', result);
-
+			
 			// Send notification if critical issues found
 			const criticalCount = result.critical?.length || 0;
 			if (criticalCount > 0) {

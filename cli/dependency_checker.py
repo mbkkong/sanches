@@ -433,38 +433,21 @@ class DependencyChecker:
             return []
 
 
-def check_dependencies(directory: str, nvd_api_key: Optional[str] = None) -> List[Dict[str, Any]]:
+def check_dependencies(directory: str) -> List[Dict[str, Any]]:
     """
     Main function to check dependencies for vulnerabilities
 
     Args:
         directory: Directory path to scan
-        nvd_api_key: NVD API key for vulnerability checking
 
     Returns:
         List of concerning vulnerabilities
     """
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    nvd_api_key = os.getenv('NVD_API_KEY')
     checker = DependencyChecker(nvd_api_key)
     return checker.scan_directory(directory)
 
 
-if __name__ == "__main__":
-    import argparse
-    from dotenv import load_dotenv
-
-    load_dotenv()
-
-    parser = argparse.ArgumentParser(description='Check dependencies for vulnerabilities')
-    parser.add_argument('--dir', required=True, help='Directory to scan')
-    parser.add_argument('--nvd-api-key', help='NVD API key (can also be set via NVD_API_KEY env var)')
-
-    args = parser.parse_args()
-
-    nvd_key = args.nvd_api_key or os.getenv('NVD_API_KEY')
-
-    vulnerabilities = check_dependencies(args.dir, nvd_key)
-
-    if vulnerabilities:
-        print(json.dumps(vulnerabilities, indent=2))
-    else:
-        print("No vulnerabilities found or no dependencies detected.")

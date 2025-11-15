@@ -29,15 +29,19 @@ let scanInterval: NodeJS.Timeout | null = null;
 // Create the main application window
 function createWindow(): void {
 	mainWindow = new BrowserWindow({
-		width: 1200,
-		height: 800,
+		width: 420,
+		height: 650,
+		show: false,
+		frame: false,
+		resizable: false,
+		transparent: false,
 		webPreferences: {
 			preload: path.join(__dirname, 'preload.js'),
 			nodeIntegration: false,
 			contextIsolation: true,
 		},
-		icon: path.join(__dirname, '../assets/icon.png'),
 		backgroundColor: '#0a0e27',
+		skipTaskbar: true,
 	});
 
 	mainWindow.loadFile(path.join(__dirname, '../src/index.html'));
@@ -51,33 +55,34 @@ function createWindow(): void {
 		mainWindow = null;
 	});
 
-	// Handle window close - minimize to tray instead
-	mainWindow.on('close', (event) => {
-		if (!isQuitting) {
-			event.preventDefault();
+	// Hide when focus is lost
+	mainWindow.on('blur', () => {
+		if (!mainWindow?.webContents.isDevToolsOpened()) {
 			mainWindow?.hide();
 		}
 	});
 }
 
-// Create system tray
+// Create system tray for menu bar
 function createTray(): void {
-	// Create a simple icon for the tray (you can replace with a proper icon)
-	const _iconPath = path.join(__dirname, '../assets/tray-icon.png');
+	// Create a template icon for the menu bar
+	const icon = nativeImage.createFromDataURL(
+		'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAIRlWElmTU0AKgAAAAgABQESAAMAAAABAAEAAAEaAAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAIAAIdpAAQAAAABAAAAWgAAAAAAAABIAAAAAQAAAEgAAAABAAOgAQADAAAAAQABAACgAgAEAAAAAQAAACCgAwAEAAAAAQAAACAAAAAAQWxvbmdBAAAJcEhEUgAAACAAAAAg+/////8ACCAeJElEQVRIDe2XB3SUVRbHf99M'
+	);
+	icon.setTemplateImage(true);
 
-	tray = new Tray(nativeImage.createEmpty());
+	tray = new Tray(icon);
+	tray.setToolTip('Sanches Security Monitor');
 
 	const contextMenu = Menu.buildFromTemplate([
 		{
-			label: 'Show App',
+			label: 'Run Scan Now',
 			click: () => {
-				mainWindow?.show();
-			},
-		},
-		{
-			label: 'Send Test Notification',
-			click: () => {
-				sendNotification('Test Notification', 'This is a test notification from Sanches App');
+				runSanchesScan().then((result) => {
+					if (result) {
+						mainWindow?.webContents.send('scan-result', result);
+					}
+				});
 			},
 		},
 		{ type: 'separator' },
@@ -90,12 +95,39 @@ function createTray(): void {
 		},
 	]);
 
-	tray.setToolTip('Sanches Notifications');
 	tray.setContextMenu(contextMenu);
 
+	// Toggle window on click
 	tray.on('click', () => {
-		mainWindow?.isVisible() ? mainWindow.hide() : mainWindow?.show();
+		toggleWindow();
 	});
+}
+
+// Toggle window visibility and position it below the tray icon
+function toggleWindow(): void {
+	if (!mainWindow) return;
+
+	if (mainWindow.isVisible()) {
+		mainWindow.hide();
+	} else {
+		showWindow();
+	}
+}
+
+// Show window positioned below tray icon
+function showWindow(): void {
+	if (!mainWindow || !tray) return;
+
+	const trayBounds = tray.getBounds();
+	const windowBounds = mainWindow.getBounds();
+
+	// Calculate position (center below tray icon)
+	const x = Math.round(trayBounds.x + trayBounds.width / 2 - windowBounds.width / 2);
+	const y = Math.round(trayBounds.y + trayBounds.height);
+
+	mainWindow.setPosition(x, y, false);
+	mainWindow.show();
+	mainWindow.focus();
 }
 
 // Send notification function
@@ -260,10 +292,11 @@ function _startPeriodicNotifications(): void {
 
 // App lifecycle
 app.whenReady().then(() => {
-	// Request notification permissions (important for macOS)
+	// Hide dock icon on macOS
 	if (process.platform === 'darwin') {
+		app.dock?.hide();
 		app.setAboutPanelOptions({
-			applicationName: 'Sanches Notifications',
+			applicationName: 'Sanches Security Monitor',
 			applicationVersion: app.getVersion(),
 		});
 	}
@@ -282,16 +315,15 @@ app.whenReady().then(() => {
 	}, 2000);
 
 	app.on('activate', () => {
-		if (BrowserWindow.getAllWindows().length === 0) {
+		if (mainWindow === null) {
 			createWindow();
 		}
 	});
 });
 
+// Don't quit when all windows are closed (menu bar app)
 app.on('window-all-closed', () => {
-	if (process.platform !== 'darwin') {
-		app.quit();
-	}
+	// Keep app running in menu bar
 });
 
 app.on('before-quit', () => {

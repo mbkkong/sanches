@@ -89,94 +89,89 @@
 <body class="bg-cyber-bg text-cyber-text font-mono overflow-hidden">
   <div class="matrix-bg"></div>
   
-  <div class="relative min-h-screen flex flex-col">
+  <div class="relative h-screen flex flex-col">
     <!-- Header -->
     <header class="relative border-b border-cyber-accent/30 bg-cyber-surface/50 backdrop-blur-sm">
       <div class="scan-line"></div>
-      <div class="max-w-7xl mx-auto px-6 py-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-cyber-accent/10 rounded-lg flex items-center justify-center border border-cyber-accent/30">
-              <span class="text-2xl glow-text">🛡️</span>
+      <div class="px-4 py-3">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-cyber-accent/10 rounded-lg flex items-center justify-center border border-cyber-accent/30">
+              <span class="text-lg glow-text">🛡️</span>
             </div>
             <div>
-              <h1 class="text-2xl font-bold glow-text text-cyber-accent">SANCHES</h1>
-              <p class="text-xs text-cyber-text/60">Security Monitor v1.0</p>
+              <h1 class="text-lg font-bold glow-text text-cyber-accent">SANCHES</h1>
+              <p class="text-xs text-cyber-text/60">Security Monitor</p>
             </div>
           </div>
           
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2">
-              <div class="w-2 h-2 bg-cyber-accent rounded-full card-glow"></div>
-              <span class="text-sm text-cyber-text/80">System Active</span>
-            </div>
-            <button id="runScanBtn" class="px-4 py-2 bg-cyber-accent/20 border border-cyber-accent/50 rounded-lg hover:bg-cyber-accent/30 transition-all text-cyber-accent text-sm font-semibold">
-              ⚡ Run Scan Now
-            </button>
+          <button id="runScanBtn" class="px-3 py-1.5 bg-cyber-accent/20 border border-cyber-accent/50 rounded-lg hover:bg-cyber-accent/30 transition-all text-cyber-accent text-xs font-semibold">
+            ⚡ Scan
+          </button>
+        </div>
+        
+        <div class="flex items-center gap-2 text-xs">
+          <div class="flex items-center gap-1">
+            <div class="w-1.5 h-1.5 bg-cyber-accent rounded-full card-glow"></div>
+            <span class="text-cyber-text/80">Active</span>
           </div>
+          <span class="text-cyber-text/40">•</span>
+          <span class="text-cyber-text/60" id="lastScan">--:--:--</span>
         </div>
       </div>
     </header>
 
     <!-- Main Content -->
     <main class="flex-1 overflow-hidden">
-      <div class="max-w-7xl mx-auto px-6 py-6 h-full flex flex-col gap-6">
+      <div class="px-4 py-3 h-full flex flex-col gap-3">
         <!-- Stats Cards -->
-        <div class="grid grid-cols-4 gap-4">
-          <div class="bg-cyber-surface/50 backdrop-blur-sm border border-cyber-danger/30 rounded-lg p-4 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-20 h-20 bg-cyber-danger/5 rounded-full blur-xl"></div>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-cyber-surface/50 backdrop-blur-sm border border-cyber-danger/30 rounded-lg p-2 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-12 h-12 bg-cyber-danger/5 rounded-full blur-xl"></div>
             <div class="relative">
-              <p class="text-cyber-danger/60 text-xs uppercase tracking-wider mb-1">Critical</p>
-              <p class="text-3xl font-bold text-cyber-danger" id="criticalCount">0</p>
+              <p class="text-cyber-danger/60 text-xs uppercase tracking-wider">Critical</p>
+              <p class="text-2xl font-bold text-cyber-danger" id="criticalCount">0</p>
             </div>
           </div>
           
-          <div class="bg-cyber-surface/50 backdrop-blur-sm border border-cyber-warning/30 rounded-lg p-4 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-20 h-20 bg-cyber-warning/5 rounded-full blur-xl"></div>
+          <div class="bg-cyber-surface/50 backdrop-blur-sm border border-cyber-warning/30 rounded-lg p-2 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-12 h-12 bg-cyber-warning/5 rounded-full blur-xl"></div>
             <div class="relative">
-              <p class="text-cyber-warning/60 text-xs uppercase tracking-wider mb-1">Warnings</p>
-              <p class="text-3xl font-bold text-cyber-warning" id="warningCount">0</p>
+              <p class="text-cyber-warning/60 text-xs uppercase tracking-wider">Warnings</p>
+              <p class="text-2xl font-bold text-cyber-warning" id="warningCount">0</p>
             </div>
           </div>
           
-          <div class="bg-cyber-surface/50 backdrop-blur-sm border border-blue-400/30 rounded-lg p-4 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-20 h-20 bg-blue-400/5 rounded-full blur-xl"></div>
+          <div class="bg-cyber-surface/50 backdrop-blur-sm border border-blue-400/30 rounded-lg p-2 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-12 h-12 bg-blue-400/5 rounded-full blur-xl"></div>
             <div class="relative">
-              <p class="text-blue-400/60 text-xs uppercase tracking-wider mb-1">Dependencies</p>
-              <p class="text-3xl font-bold text-blue-400" id="depsCount">0</p>
-            </div>
-          </div>
-          
-          <div class="bg-cyber-surface/50 backdrop-blur-sm border border-cyber-accent/30 rounded-lg p-4 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-20 h-20 bg-cyber-accent/5 rounded-full blur-xl"></div>
-            <div class="relative">
-              <p class="text-cyber-accent/60 text-xs uppercase tracking-wider mb-1">Last Scan</p>
-              <p class="text-sm font-semibold text-cyber-accent" id="lastScan">--:--:--</p>
+              <p class="text-blue-400/60 text-xs uppercase tracking-wider">Dependencies</p>
+              <p class="text-2xl font-bold text-blue-400" id="depsCount">0</p>
             </div>
           </div>
         </div>
 
         <!-- Working Directory -->
-        <div class="bg-cyber-surface/50 backdrop-blur-sm border border-cyber-accent/20 rounded-lg p-4">
+        <div class="bg-cyber-surface/50 backdrop-blur-sm border border-cyber-accent/20 rounded-lg p-2">
           <div class="flex items-center gap-2">
-            <span class="text-cyber-accent/60 text-sm">📂 Monitoring:</span>
-            <code class="text-cyber-accent text-sm font-mono" id="workingDir">...</code>
+            <span class="text-cyber-accent/60 text-xs">📂</span>
+            <code class="text-cyber-accent text-xs font-mono truncate" id="workingDir">...</code>
           </div>
         </div>
 
         <!-- Issues List -->
         <div class="flex-1 overflow-hidden flex flex-col min-h-0">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-bold text-cyber-accent glow-text">Security Issues</h2>
-            <div class="flex gap-2 text-xs">
-              <button class="filter-btn active px-3 py-1 rounded-full border" data-filter="all">All</button>
-              <button class="filter-btn px-3 py-1 rounded-full border border-cyber-danger/30 text-cyber-danger" data-filter="critical">Critical</button>
-              <button class="filter-btn px-3 py-1 rounded-full border border-cyber-warning/30 text-cyber-warning" data-filter="warning">Warnings</button>
-              <button class="filter-btn px-3 py-1 rounded-full border border-blue-400/30 text-blue-400" data-filter="dependencies">Dependencies</button>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-sm font-bold text-cyber-accent glow-text">Issues</h2>
+            <div class="flex gap-1 text-xs">
+              <button class="filter-btn active px-2 py-0.5 rounded-full border text-xs" data-filter="all">All</button>
+              <button class="filter-btn px-2 py-0.5 rounded-full border border-cyber-danger/30 text-cyber-danger text-xs" data-filter="critical">Critical</button>
+              <button class="filter-btn px-2 py-0.5 rounded-full border border-cyber-warning/30 text-cyber-warning text-xs" data-filter="warning">Warn</button>
+              <button class="filter-btn px-2 py-0.5 rounded-full border border-blue-400/30 text-blue-400 text-xs" data-filter="dependencies">Deps</button>
             </div>
           </div>
           
-          <div class="flex-1 overflow-y-auto space-y-2 pr-2" id="issuesContainer" style="max-height: calc(100vh - 400px);">
+          <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="issuesContainer">
             <!-- Issues will be dynamically inserted here -->
             <div class="text-center py-20 text-cyber-text/40">
               <div class="text-6xl mb-4">🔍</div>

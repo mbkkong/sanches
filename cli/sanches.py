@@ -7,9 +7,10 @@ import argparse
 import json
 import os
 import pathlib
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Any
 import pathspec
 from google import genai
+from dependency_checker import check_dependencies
 # from google.genai import types
 
 
@@ -253,11 +254,48 @@ class Sanches:
         )
         return response.text
 
+    def check_dependencies(self, path: str) -> List[Dict[str, Any]]:
+        """Check dependencies for vulnerabilities using dependency_checker"""
+        try:
+            vulnerabilities = check_dependencies(path)
+            
+            # Format vulnerabilities into the expected output format
+            formatted_deps = []
+            for vuln in vulnerabilities:
+                formatted_deps.append({
+                    'package_type': vuln.get('package_manager', 'unknown'),
+                    'package': vuln.get('package_name', 'unknown'),
+                    'description': f"{vuln.get('cve_id', 'Unknown CVE')}: {vuln.get('description', 'No description')} (Severity: {vuln.get('severity', 'Unknown')}, CVSS: {vuln.get('cvss_score', 'N/A')})"
+                })
+            
+            return formatted_deps
+        except Exception as e:
+            print(f"Warning: Error checking dependencies: {e}", flush=True)
+            return []
+
     def process(self, path: str) -> Optional[str]:
         """Main processing function"""
         files_content = self.read_files(path)
         response = self.send_to_gemini(files_content)
-        return response
+        
+        # Parse the Gemini response
+        try:
+            gemini_result = json.loads(response) if response else {}
+        except json.JSONDecodeError:
+            gemini_result = {}
+        
+        # Check dependencies using dependency_checker
+        dependencies = self.check_dependencies(path)
+        
+        # Merge results
+        final_result = {
+            'directory': gemini_result.get('directory', path),
+            'critical': gemini_result.get('critical', []),
+            'warning': gemini_result.get('warning', []),
+            'dependencies': dependencies  # Always include dependencies (empty array if none found)
+        }
+        
+        return json.dumps(final_result)
 
 
 def main():

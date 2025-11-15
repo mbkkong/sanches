@@ -498,7 +498,7 @@ async function runSanchesScan(): Promise<any> {
 		const projectPath = activeProject?.path || process.cwd();
 		
 		// Execute Sanches CLI with --dir and --api flags
-		const command = `${sanchesPath} --dir "${projectPath}" --api "${apiKey}"`;
+		const command = `${sanchesPath} --dir "${projectPath}" --api-key "${apiKey}"`;
 		const { stdout, stderr } = await execAsync(command);
 		
 		if (stderr) {

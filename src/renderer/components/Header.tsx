@@ -43,61 +43,87 @@ export const Header: React.FC<HeaderProps> = ({
 							</div>
 						</div>
 
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									onClick={onRunScan}
-									size="lg"
-									className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all h-11 px-6"
-								>
-									<PlayCircle className="w-5 h-5 mr-2" />
-									Run Scan
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>Start a security scan</p>
-							</TooltipContent>
-						</Tooltip>
+						<div className="flex items-center gap-3">
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										onClick={onOpenSettings}
+										size="lg"
+										variant="outline"
+										className="h-11 px-4 border-2"
+									>
+										<Settings className="w-5 h-5" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Settings</p>
+								</TooltipContent>
+							</Tooltip>
+
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										onClick={onRunScan}
+										size="lg"
+										disabled={!canStartAnalysis}
+										className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md hover:shadow-lg transition-all h-11 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										<Zap className="w-5 h-5 mr-2" />
+										Start Analysis
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>
+										{!hasApiKey
+											? 'API key required'
+											: !hasProjects
+											? 'Add a project first'
+											: 'Start security analysis'}
+									</p>
+								</TooltipContent>
+							</Tooltip>
+						</div>
 					</div>
 
 					<Separator className="mb-4" />
 
-					<div className="flex items-center gap-4 flex-wrap">
-						<div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
-							<Activity
-								className={`w-5 h-5 ${globalWatchEnabled ? 'text-emerald-600 animate-pulse-slow' : 'text-red-600'}`}
-							/>
-							<Badge
-								className={
-									globalWatchEnabled
-										? 'bg-emerald-100 text-emerald-700 border-emerald-200 font-semibold'
-										: 'bg-red-100 text-red-700 border-red-200 font-semibold'
-								}
-							>
-								{globalWatchEnabled ? 'Active' : 'Stopped'}
-							</Badge>
-						</div>
-
-						<Separator orientation="vertical" className="h-6" />
-
-						<div className="flex items-center gap-2 text-sm text-slate-700 font-medium">
-							<Clock className="w-4 h-4 text-slate-500" />
-							<span>Last scan: {lastScanTime}</span>
-						</div>
-
-						<Separator orientation="vertical" className="h-6" />
-
-						<div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
-							<Switch
-								checked={globalWatchEnabled}
-								onCheckedChange={onToggleWatch}
-								id="global-watch"
-							/>
-							<label htmlFor="global-watch" className="text-sm font-medium cursor-pointer text-slate-700">
-								Watch Mode
-							</label>
-						</div>
+				<div className="flex items-center gap-4 flex-wrap">
+					<div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
+						<Activity
+							className={`w-5 h-5 ${globalWatchEnabled ? 'text-emerald-600 animate-pulse-slow' : 'text-red-600'}`}
+						/>
+						<Badge
+							className={
+								globalWatchEnabled
+									? 'bg-emerald-100 text-emerald-700 border-emerald-200 font-semibold'
+									: 'bg-red-100 text-red-700 border-red-200 font-semibold'
+							}
+						>
+							{globalWatchEnabled ? 'Active' : 'Stopped'}
+						</Badge>
 					</div>
+
+					<Separator orientation="vertical" className="h-6" />
+
+					<div className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+						<Clock className="w-4 h-4 text-slate-500" />
+						<span>Last scan: {lastScanTime}</span>
+					</div>
+
+					<Separator orientation="vertical" className="h-6" />
+
+					<div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white border-2 border-slate-300 shadow-sm hover:border-slate-400 transition-all">
+						<label htmlFor="global-watch" className="text-sm font-semibold cursor-pointer text-slate-900 select-none">
+							Watch Mode
+						</label>
+						<Switch
+							checked={globalWatchEnabled}
+							onCheckedChange={onToggleWatch}
+							id="global-watch"
+							aria-label="Toggle watch mode"
+						/>
+					</div>
+				</div>
 				</div>
 			</header>
 		</TooltipProvider>

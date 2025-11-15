@@ -16,6 +16,7 @@ interface IssuesListProps {
 export const IssuesList: React.FC<IssuesListProps> = ({ issues, dependencies }) => {
 	const [filter, setFilter] = useState<'all' | IssueType>('all');
 	const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
+	const [promptCopied, setPromptCopied] = useState(false);
 
 	const filteredIssues = issues.filter((issue) => filter === 'all' || issue.type === filter);
 	const filteredDeps = filter === 'all' || filter === 'dependencies' ? dependencies : [];
@@ -24,6 +25,39 @@ export const IssuesList: React.FC<IssuesListProps> = ({ issues, dependencies }) 
 		navigator.clipboard.writeText(text).then(() => {
 			setCopiedIndex(index);
 			setTimeout(() => setCopiedIndex(null), 1500);
+		});
+	};
+
+	const generateAIFixPrompt = () => {
+		// Group issues by file
+		const issuesByFile = new Map<string, IssueWithType[]>();
+		
+		// Only include critical and warning issues (not dependencies)
+		const relevantIssues = issues.filter(i => i.type === 'critical' || i.type === 'warning');
+		
+		relevantIssues.forEach(issue => {
+			const file = issue.file || 'Unknown file';
+			if (!issuesByFile.has(file)) {
+				issuesByFile.set(file, []);
+			}
+			issuesByFile.get(file)?.push(issue);
+		});
+
+		// Generate the prompt
+		let prompt = 'Please fix the following security issues:\n\n';
+		
+		issuesByFile.forEach((fileIssues, file) => {
+			prompt += `Fix security issues in ${file}:\n`;
+			fileIssues.forEach((issue, idx) => {
+				prompt += `${idx + 1}. [${issue.type.toUpperCase()}] ${issue.description}\n`;
+			});
+			prompt += '\n';
+		});
+
+		// Copy to clipboard
+		navigator.clipboard.writeText(prompt).then(() => {
+			setPromptCopied(true);
+			setTimeout(() => setPromptCopied(false), 2000);
 		});
 	};
 
@@ -60,6 +94,7 @@ export const IssuesList: React.FC<IssuesListProps> = ({ issues, dependencies }) 
 	const criticalCount = issues.filter((i) => i.type === 'critical').length;
 	const warningCount = issues.filter((i) => i.type === 'warning').length;
 	const depsCount = dependencies.length;
+	const hasRelevantIssues = criticalCount > 0 || warningCount > 0;
 
 	return (
 		<div className="flex-1 overflow-hidden flex flex-col animate-fade-in">
@@ -73,20 +108,42 @@ export const IssuesList: React.FC<IssuesListProps> = ({ issues, dependencies }) 
 							</Badge>
 						)}
 					</div>
-					<TabsList className="bg-slate-100 p-1 border border-slate-200">
-						<TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium">
-							All
-						</TabsTrigger>
-						<TabsTrigger value="critical" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium">
-							Critical {criticalCount > 0 && <Badge className="ml-2 text-xs bg-red-100 text-red-700 border-red-200">{criticalCount}</Badge>}
-						</TabsTrigger>
-						<TabsTrigger value="warning" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium">
-							Warnings {warningCount > 0 && <Badge className="ml-2 text-xs bg-amber-100 text-amber-700 border-amber-200">{warningCount}</Badge>}
-						</TabsTrigger>
-						<TabsTrigger value="dependencies" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium">
-							Deps {depsCount > 0 && <Badge className="ml-2 text-xs bg-blue-100 text-blue-700 border-blue-200">{depsCount}</Badge>}
-						</TabsTrigger>
-					</TabsList>
+					<div className="flex items-center gap-3">
+						{hasRelevantIssues && (
+							<Button
+								onClick={generateAIFixPrompt}
+								size="sm"
+								variant="outline"
+								className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 text-purple-700 font-medium shadow-sm"
+							>
+								{promptCopied ? (
+									<>
+										<CheckCircle2 className="w-4 h-4 mr-2" />
+										Copied!
+									</>
+								) : (
+									<>
+										<Sparkles className="w-4 h-4 mr-2" />
+										Generate AI Fix Prompt
+									</>
+								)}
+							</Button>
+						)}
+						<TabsList className="bg-slate-100 p-1 border border-slate-200">
+							<TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium">
+								All
+							</TabsTrigger>
+							<TabsTrigger value="critical" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium">
+								Critical {criticalCount > 0 && <Badge className="ml-2 text-xs bg-red-100 text-red-700 border-red-200">{criticalCount}</Badge>}
+							</TabsTrigger>
+							<TabsTrigger value="warning" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium">
+								Warnings {warningCount > 0 && <Badge className="ml-2 text-xs bg-amber-100 text-amber-700 border-amber-200">{warningCount}</Badge>}
+							</TabsTrigger>
+							<TabsTrigger value="dependencies" className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium">
+								Deps {depsCount > 0 && <Badge className="ml-2 text-xs bg-blue-100 text-blue-700 border-blue-200">{depsCount}</Badge>}
+							</TabsTrigger>
+						</TabsList>
+					</div>
 				</div>
 
 				<Separator className="mb-4" />

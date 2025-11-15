@@ -39,15 +39,21 @@ let scanInterval: NodeJS.Timeout | null = null;
 
 // Create the main application window
 function createWindow(): void {
+	// Set app icon
+	const iconPath = app.isPackaged
+		? path.join(process.resourcesPath, 'assets', 'sanches.png')
+		: path.join(__dirname, '..', 'assets', 'sanches.png');
+
 	mainWindow = new BrowserWindow({
 		width: 1200,
 		height: 800,
 		minWidth: 800,
 		minHeight: 600,
-		show: false, // Don't show on startup - only show when user clicks menu bar
+		show: true, // Show on startup
 		frame: true, // Show title bar and window controls
 		resizable: true,
 		transparent: false,
+		icon: iconPath, // Set window icon
 		webPreferences: {
 			preload: path.join(__dirname, 'preload.js'),
 			nodeIntegration: false,
@@ -62,12 +68,17 @@ function createWindow(): void {
 
 	mainWindow.loadFile(path.join(__dirname, '../dist-react/index.html'));
 
+	// Show window when ready
+	mainWindow.once('ready-to-show', () => {
+		mainWindow?.show();
+	});
+
 	// Open DevTools in development
 	if (process.env.NODE_ENV === 'development') {
 		mainWindow.webContents.openDevTools();
 	}
 
-	// Prevent closing - hide instead to run in background
+	// Minimize to tray instead of closing (only if user closes window)
 	mainWindow.on('close', (event) => {
 		if (!isQuitting) {
 			event.preventDefault();
@@ -190,9 +201,17 @@ function sendNotification(title: string, body: string, options?: Partial<Notific
 		return;
 	}
 
+	// Set notification icon
+	const iconPath = app.isPackaged
+		? path.join(process.resourcesPath, 'assets', 'sanches.png')
+		: path.join(__dirname, '..', 'assets', 'sanches.png');
+	
+	const icon = nativeImage.createFromPath(iconPath);
+
 	const notification = new Notification({
 		title,
 		body,
+		icon: icon, // Add icon to notification
 		silent: false,
 		timeoutType: 'default',
 		...options,
@@ -491,9 +510,9 @@ function _startPeriodicNotifications(): void {
 
 // App lifecycle
 app.whenReady().then(() => {
-	// Hide dock icon on macOS
+	// Show dock icon on macOS and set app options
 	if (process.platform === 'darwin') {
-		app.dock?.hide();
+		app.dock?.show(); // Show in dock
 		app.setAboutPanelOptions({
 			applicationName: 'Sanches',
 			applicationVersion: app.getVersion(),
@@ -519,6 +538,9 @@ app.whenReady().then(() => {
 	app.on('activate', () => {
 		if (mainWindow === null) {
 			createWindow();
+		} else {
+			// Show window if it exists but is hidden
+			mainWindow.show();
 		}
 	});
 });

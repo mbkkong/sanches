@@ -14,7 +14,7 @@
 		"setup:python": "./cli/setup-python.sh",
 		"prepackage": "npm run setup:python",
 		"package": "npm run build && electron-builder",
-		"package:mac": "npm run build && electron-builder --mac",
+		"package:mac": "npm run setup:python && npm run build && electron-builder --mac",
 		"package:win": "npm run build && electron-builder --win",
 		"package:linux": "npm run build && electron-builder --linux",
 		"lint": "biome check .",

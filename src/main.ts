@@ -114,11 +114,11 @@ function createWindow(): void {
 
 // Create system tray for menu bar
 function createTray(): void {
-	// Create a template icon for the menu bar
+	// Create a template icon for the menu bar (22x22 for standard, 44x44 for retina)
 	// Remove .png extension to let Electron automatically find @2x versions
 	const iconBasePath = app.isPackaged
-		? path.join(process.resourcesPath, 'assets', 'sanchesDark')
-		: path.join(__dirname, '..', 'assets', 'sanchesDark');
+		? path.join(process.resourcesPath, 'assets', 'sanchesDarkTemplate')
+		: path.join(__dirname, '..', 'assets', 'sanchesDarkTemplate');
 	
 	console.log('Tray icon base path:', iconBasePath);
 	
@@ -177,7 +177,7 @@ function createTray(): void {
 function updateTrayIcon(hasIssues: boolean): void {
 	if (!tray) return;
 
-	const iconBaseName = hasIssues ? 'sanchesUpdateDark' : 'sanchesDark';
+	const iconBaseName = hasIssues ? 'sanchesUpdateDarkTemplate' : 'sanchesDarkTemplate';
 	const iconPath = app.isPackaged
 		? path.join(process.resourcesPath, 'assets', iconBaseName)
 		: path.join(__dirname, '..', 'assets', iconBaseName);

@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { ScanningLoader } from './ScanningLoader';
 import logo from '../../../assets/sanches.png';
 
 interface HeaderProps {
@@ -14,6 +15,7 @@ interface HeaderProps {
 	lastScanTime: string;
 	hasApiKey: boolean;
 	hasProjects: boolean;
+	isScanning?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
 	onToggleWatch,
 	onOpenSettings,
 	lastScanTime,
+	isScanning = false,
 }) => {
 	return (
 		<TooltipProvider>
@@ -40,6 +43,8 @@ export const Header: React.FC<HeaderProps> = ({
 						</div>
 
 						<div className="flex items-center gap-3">
+							<ScanningLoader isVisible={isScanning} />
+							
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<div className={`flex items-center gap-3 px-4 py-2 rounded-lg border-2 shadow-sm transition-all ${

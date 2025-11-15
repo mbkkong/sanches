@@ -31,6 +31,7 @@ export const useElectron = () => {
 	const [scanResult, setScanResult] = useState<ScanResult | null>(null);
 	const [apiKey, setApiKey] = useState<string | undefined>();
 	const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+	const [isScanning, setIsScanning] = useState(false);
 
 	const loadProjects = useCallback(async () => {
 		const { projects, activeProjectId } = await window.electronAPI.getProjects();
@@ -78,9 +79,17 @@ export const useElectron = () => {
 	}, []);
 
 	const runScan = useCallback(async () => {
-		const result = await window.electronAPI.runScan();
-		if (result) {
-			setScanResult(result);
+		setIsScanning(true);
+		try {
+			const result = await window.electronAPI.runScan();
+			if (result) {
+				setScanResult(result);
+			}
+		} finally {
+			// Add a minimum delay so the loader is visible for at least 1.5 seconds
+			setTimeout(() => {
+				setIsScanning(false);
+			}, 1500);
 		}
 	}, []);
 
@@ -134,6 +143,7 @@ export const useElectron = () => {
 		scanResult,
 		apiKey,
 		notificationsEnabled,
+		isScanning,
 		addProject,
 		deleteProject,
 		setActiveProject,

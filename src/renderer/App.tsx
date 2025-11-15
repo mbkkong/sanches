@@ -19,6 +19,7 @@ export const App: React.FC = () => {
 		scanResult,
 		apiKey,
 		notificationsEnabled,
+		isScanning,
 		addProject,
 		deleteProject,
 		setActiveProject,
@@ -81,6 +82,7 @@ export const App: React.FC = () => {
 				lastScanTime={lastScanTime}
 				hasApiKey={hasApiKey}
 				hasProjects={hasProjects}
+				isScanning={isScanning}
 			/>
 
 			<main className="flex-1 overflow-hidden min-h-0">

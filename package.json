@@ -1,0 +1,69 @@
+{
+	"name": "sanches-electron-app",
+	"version": "1.0.0",
+	"description": "Electron app with real-time notifications",
+	"main": "dist/main.js",
+	"scripts": {
+		"start": "npm run build && electron .",
+		"dev": "concurrently \"npm run build:watch\" \"npm run electron:dev\"",
+		"build": "tsc",
+		"build:watch": "tsc --watch",
+		"electron:dev": "wait-on dist/main.js && electron . --remote-debugging-port=9222",
+		"package": "npm run build && electron-builder",
+		"package:mac": "npm run build && electron-builder --mac",
+		"package:win": "npm run build && electron-builder --win",
+		"package:linux": "npm run build && electron-builder --linux"
+	},
+	"keywords": [
+		"electron",
+		"notifications",
+		"real-time"
+	],
+	"author": "",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^22.10.1",
+		"@types/ws": "^8.18.1",
+		"concurrently": "^9.1.0",
+		"electron": "^39.2.0",
+		"electron-builder": "^25.1.8",
+		"typescript": "^5.7.2",
+		"wait-on": "^8.0.1"
+	},
+	"dependencies": {
+		"electron-store": "^10.0.0",
+		"ws": "^8.18.0"
+	},
+	"build": {
+		"appId": "com.sanches.electron-app",
+		"productName": "Sanches Notifications",
+		"directories": {
+			"output": "release"
+		},
+		"files": [
+			"dist/**/*",
+			"assets/**/*",
+			"package.json"
+		],
+		"mac": {
+			"category": "public.app-category.utilities",
+			"target": [
+				"dmg",
+				"zip"
+			]
+		},
+		"win": {
+			"target": [
+				"nsis",
+				"portable"
+			]
+		},
+		"linux": {
+			"target": [
+				"AppImage",
+				"deb"
+			],
+			"category": "Utility"
+		}
+	}
+}

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <title>Sanches - Real-Time Notifications</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .content {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .form-section {
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #555;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+    }
+
+    button {
+      flex: 1;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #555;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .notification-log {
+      flex: 1;
+      margin-top: 1rem;
+      overflow-y: auto;
+      border-top: 2px solid #e0e0e0;
+      padding-top: 1rem;
+    }
+
+    .log-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+
+    .log-item {
+      background: #f8f9fa;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .log-item-title {
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 0.25rem;
+    }
+
+    .log-item-body {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .log-item-time {
+      color: #999;
+      font-size: 0.8rem;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .info-box h3 {
+      color: #1976d2;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .info-box code {
+      background: white;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      color: #c7254e;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #667eea;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #764ba2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔔 Sanches Notifications</h1>
+      <p class="subtitle">Real-Time Notification System</p>
+    </header>
+
+    <div class="content">
+      <div class="info-box">
+        <h3>📡 WebSocket Server Active</h3>
+        <p>Send notifications via WebSocket on <code>ws://localhost:8080</code></p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+          Example: <code>{"type":"notification","title":"Hello","body":"World"}</code>
+        </p>
+      </div>
+
+      <div class="form-section">
+        <div class="form-group">
+          <label for="notificationTitle">Notification Title</label>
+          <input type="text" id="notificationTitle" placeholder="Enter notification title..." value="Hello from Sanches!">
+        </div>
+
+        <div class="form-group">
+          <label for="notificationBody">Notification Body</label>
+          <textarea id="notificationBody" placeholder="Enter notification message...">This is a real-time notification from your Electron app!</textarea>
+        </div>
+
+        <div class="button-group">
+          <button class="btn-primary" id="sendNotificationBtn">
+            🚀 Send Notification
+          </button>
+          <button class="btn-secondary" id="clearLogBtn">
+            🗑️ Clear Log
+          </button>
+        </div>
+      </div>
+
+      <div class="notification-log">
+        <div class="log-title">📋 Notification History</div>
+        <div id="logContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const logContainer = document.getElementById('logContainer');
+    const sendBtn = document.getElementById('sendNotificationBtn');
+    const clearBtn = document.getElementById('clearLogBtn');
+    const titleInput = document.getElementById('notificationTitle');
+    const bodyInput = document.getElementById('notificationBody');
+
+    // Add notification to log
+    function addToLog(title, body, timestamp) {
+      const logItem = document.createElement('div');
+      logItem.className = 'log-item';
+      logItem.innerHTML = `
+        <div class="log-item-title">${escapeHtml(title)}</div>
+        <div class="log-item-body">${escapeHtml(body)}</div>
+        <div class="log-item-time">${new Date(timestamp).toLocaleString()}</div>
+      `;
+      logContainer.insertBefore(logItem, logContainer.firstChild);
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Send notification
+    sendBtn.addEventListener('click', async () => {
+      const title = titleInput.value.trim();
+      const body = bodyInput.value.trim();
+
+      if (!title || !body) {
+        alert('Please fill in both title and body!');
+        return;
+      }
+
+      try {
+        await window.electronAPI.sendNotification(title, body);
+        addToLog(title, body, new Date().toISOString());
+      } catch (error) {
+        console.error('Error sending notification:', error);
+        alert('Failed to send notification!');
+      }
+    });
+
+    // Clear log
+    clearBtn.addEventListener('click', () => {
+      logContainer.innerHTML = '';
+    });
+
+    // Listen for notifications from main process
+    window.electronAPI.onNotificationSent((data) => {
+      console.log('Notification sent:', data);
+    });
+
+    // Allow Enter key to send
+    titleInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendBtn.click();
+      }
+    });
+
+    // Add welcome message
+    setTimeout(() => {
+      addToLog(
+        'Welcome!',
+        'Your notification system is ready. Try sending a notification or connect via WebSocket!',
+        new Date().toISOString()
+      );
+    }, 500);
+  </script>
+</body>
+</html>
+

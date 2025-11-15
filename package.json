@@ -1,5 +1,5 @@
 {
-	"name": "sanches-electron-app",
+	"name": "sanches-ui",
 	"version": "1.0.0",
 	"description": "Electron app with real-time notifications",
 	"main": "dist/main.js",

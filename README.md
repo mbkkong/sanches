@@ -1,4 +1,4 @@
-# Sanches - Real-Time Notification App
+# Sanches - Real-Time App
 
 A modern Electron application built with TypeScript that provides real-time notification for your security issues via WebSocket connections.
 

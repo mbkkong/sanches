@@ -4,6 +4,8 @@ module.exports = {
 	theme: {
 		extend: {
 			colors: {
+				primary: 'hsl(var(--color-primary))',
+				'primary-foreground': 'hsl(var(--color-primary-foreground))',
 				success: 'hsl(var(--color-success))',
 				warning: 'hsl(var(--color-warning))',
 				info: 'hsl(var(--color-info))',

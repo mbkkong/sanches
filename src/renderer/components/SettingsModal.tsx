@@ -139,14 +139,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 						variant="outline" 
 						onClick={onClose} 
 						disabled={isLoading}
-						className="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 font-medium"
 					>
 						Cancel
 					</Button>
 					<Button 
 						onClick={handleSave} 
 						disabled={isLoading}
-						className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium shadow-lg border-0"
+						variant="default"
 					>
 						{isLoading ? 'Saving...' : 'Save Settings'}
 					</Button>

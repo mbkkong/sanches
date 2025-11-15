@@ -40,8 +40,7 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
 									<Button 
 										variant="default" 
 										size="default"
-										onClick={onAddProject} 
-										className="shadow-md bg-primary hover:bg-primary/90 h-11"
+										onClick={onAddProject}
 									>
 										<Plus className="w-4 h-4 mr-2" />
 										Add Project
@@ -53,7 +52,7 @@ export const ProjectSelector: React.FC<ProjectSelectorProps> = ({
 							</Tooltip>
 							<Tooltip>
 								<TooltipTrigger asChild>
-									<Button variant="outline" size="icon" onClick={onManageProjects} className="h-11 w-11">
+									<Button variant="outline" size="icon" onClick={onManageProjects}>
 										<Settings className="w-4 h-4" />
 									</Button>
 								</TooltipTrigger>

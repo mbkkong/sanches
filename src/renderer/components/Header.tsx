@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
 										onClick={onRunScan}
 										size="lg"
 										disabled={!canStartAnalysis}
-										className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md hover:shadow-lg transition-all h-11 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+										variant="default"
 									>
 										<Zap className="w-5 h-5 mr-2" />
 										Start Analysis

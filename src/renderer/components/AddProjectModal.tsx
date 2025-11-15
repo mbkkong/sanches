@@ -101,13 +101,13 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({ isOpen, onClos
 				<Separator className="my-4" />
 
 				<DialogFooter className="gap-2 sm:gap-2">
-					<Button variant="outline" onClick={handleCancel} className="gap-2 cursor-pointer hover:bg-slate-50">
+					<Button variant="outline" onClick={handleCancel}>
 						<X className="w-4 h-4" />
 						Cancel
 					</Button>
 					<Button 
 						onClick={handleSave} 
-						className="gap-2 bg-primary hover:bg-primary/90 shadow-md cursor-pointer"
+						variant="default"
 					>
 						<Check className="w-4 h-4" />
 						Add Project

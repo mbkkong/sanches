@@ -135,7 +135,6 @@ export const ManageProjectsModal: React.FC<ManageProjectsModalProps> = ({
 															variant="destructive"
 															size="icon"
 															onClick={() => handleDelete(project.id, project.name)}
-															className="hover:scale-105 transition-transform cursor-pointer shadow-md"
 														>
 															<Trash2 className="w-4 h-4" />
 														</Button>

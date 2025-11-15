@@ -342,13 +342,26 @@ ipcMain.handle('delete-project', async (_event, projectId: string) => {
 	const filtered = projects.filter(p => p.id !== projectId);
 	(store as any).set('projects', filtered);
 	
-	// If deleted project was active, set first project as active
+	// Check if deleted project was active
 	const activeProjectId = (store as any).get('activeProjectId') as string;
-	if (activeProjectId === projectId && filtered.length > 0) {
-		(store as any).set('activeProjectId', filtered[0].id);
+	const wasActiveProject = activeProjectId === projectId;
+	
+	if (wasActiveProject) {
+		if (filtered.length > 0) {
+			// Set first project as active and run a scan for it
+			(store as any).set('activeProjectId', filtered[0].id);
+			const result = await runSanchesScan();
+			if (result) {
+				mainWindow?.webContents.send('scan-result', result);
+			}
+		} else {
+			// No projects left, clear active project and send empty scan result
+			(store as any).set('activeProjectId', undefined);
+			mainWindow?.webContents.send('scan-result', null);
+		}
 	}
 	
-	return { success: true };
+	return { success: true, wasActiveProject };
 });
 
 ipcMain.handle('set-active-project', async (_event, projectId: string) => {

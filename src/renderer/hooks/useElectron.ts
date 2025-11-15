@@ -79,9 +79,13 @@ export const useElectron = () => {
 	}, [loadProjects, runScan]);
 
 	const deleteProject = useCallback(async (projectId: string) => {
+		// Clear scan results if we're deleting the active project
+		if (projectId === activeProjectId) {
+			setScanResult(null);
+		}
 		await window.electronAPI.deleteProject(projectId);
 		await loadProjects();
-	}, [loadProjects]);
+	}, [loadProjects, activeProjectId]);
 
 	const setActiveProject = useCallback(async (projectId: string) => {
 		await window.electronAPI.setActiveProject(projectId);
@@ -106,6 +110,7 @@ export const useElectron = () => {
 		runScan();
 
 		window.electronAPI.onScanResult((data) => {
+			// Handle null results (e.g., when a project is deleted)
 			setScanResult(data);
 		});
 	}, []);

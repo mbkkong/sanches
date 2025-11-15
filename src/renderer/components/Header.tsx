@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, PlayCircle, Activity, Clock } from 'lucide-react';
+import { Shield, PlayCircle, Activity, Clock, Settings, Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Switch } from './ui/switch';
@@ -10,15 +10,22 @@ interface HeaderProps {
 	globalWatchEnabled: boolean;
 	onToggleWatch: () => void;
 	onRunScan: () => void;
+	onOpenSettings: () => void;
 	lastScanTime: string;
+	hasApiKey: boolean;
+	hasProjects: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
 	globalWatchEnabled,
 	onToggleWatch,
 	onRunScan,
+	onOpenSettings,
 	lastScanTime,
+	hasApiKey,
+	hasProjects,
 }) => {
+	const canStartAnalysis = hasApiKey && hasProjects;
 	return (
 		<TooltipProvider>
 			<header className="border-b border-slate-200 bg-white shadow-sm">

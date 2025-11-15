@@ -27,6 +27,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	toggleProjectWatch: (projectId: string, enabled: boolean) => 
 		ipcRenderer.invoke('toggle-project-watch', projectId, enabled),
 
+	getApiKey: () => ipcRenderer.invoke('get-api-key'),
+
+	saveApiKey: (apiKey: string) => ipcRenderer.invoke('save-api-key', apiKey),
+
 	onNotificationSent: (callback: (data: any) => void) => {
 		ipcRenderer.on('notification-sent', (_event, data) => callback(data));
 	},
@@ -49,6 +53,8 @@ export interface ElectronAPI {
 	getGlobalWatch: () => Promise<boolean>;
 	setGlobalWatch: (enabled: boolean) => Promise<any>;
 	toggleProjectWatch: (projectId: string, enabled: boolean) => Promise<any>;
+	getApiKey: () => Promise<string | undefined>;
+	saveApiKey: (apiKey: string) => Promise<{ success: boolean }>;
 	onNotificationSent: (callback: (data: any) => void) => void;
 	onScanResult: (callback: (data: any) => void) => void;
 }

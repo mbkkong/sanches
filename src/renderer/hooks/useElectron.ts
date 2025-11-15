@@ -10,6 +10,8 @@ interface ElectronAPI {
 	getGlobalWatch: () => Promise<boolean>;
 	setGlobalWatch: (enabled: boolean) => Promise<{ success: boolean }>;
 	toggleProjectWatch: (projectId: string, enabled: boolean) => Promise<{ success: boolean }>;
+	getApiKey: () => Promise<string | undefined>;
+	saveApiKey: (apiKey: string) => Promise<{ success: boolean }>;
 	onScanResult: (callback: (data: ScanResult) => void) => void;
 }
 
@@ -24,6 +26,7 @@ export const useElectron = () => {
 	const [activeProjectId, setActiveProjectId] = useState<string | undefined>();
 	const [globalWatchEnabled, setGlobalWatchEnabled] = useState(true);
 	const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+	const [apiKey, setApiKey] = useState<string | undefined>();
 
 	const loadProjects = useCallback(async () => {
 		const { projects, activeProjectId } = await window.electronAPI.getProjects();
@@ -34,6 +37,16 @@ export const useElectron = () => {
 	const loadGlobalWatch = useCallback(async () => {
 		const enabled = await window.electronAPI.getGlobalWatch();
 		setGlobalWatchEnabled(enabled);
+	}, []);
+
+	const loadApiKey = useCallback(async () => {
+		const key = await window.electronAPI.getApiKey();
+		setApiKey(key);
+	}, []);
+
+	const saveApiKey = useCallback(async (key: string) => {
+		await window.electronAPI.saveApiKey(key);
+		setApiKey(key);
 	}, []);
 
 	const runScan = useCallback(async () => {
@@ -72,6 +85,7 @@ export const useElectron = () => {
 	useEffect(() => {
 		loadProjects();
 		loadGlobalWatch();
+		loadApiKey();
 		runScan();
 
 		window.electronAPI.onScanResult((data) => {
@@ -84,6 +98,7 @@ export const useElectron = () => {
 		activeProjectId,
 		globalWatchEnabled,
 		scanResult,
+		apiKey,
 		addProject,
 		deleteProject,
 		setActiveProject,
@@ -91,6 +106,7 @@ export const useElectron = () => {
 		toggleProjectWatch,
 		runScan,
 		loadProjects,
+		saveApiKey,
 	};
 };
 

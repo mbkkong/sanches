@@ -25,6 +25,7 @@ interface StoreType {
 	projects?: Project[];
 	activeProjectId?: string;
 	globalWatchEnabled?: boolean;
+	geminiApiKey?: string;
 }
 
 // Initialize electron-store for persisting settings
@@ -367,9 +368,25 @@ ipcMain.handle('toggle-project-watch', async (_event, projectId: string, enabled
 	return { success: true };
 });
 
+ipcMain.handle('get-api-key', async () => {
+	return (store as any).get('geminiApiKey') as string | undefined;
+});
+
+ipcMain.handle('save-api-key', async (_event, apiKey: string) => {
+	(store as any).set('geminiApiKey', apiKey);
+	return { success: true };
+});
+
 // Run Sanches CLI and get security scan results
 async function runSanchesScan(): Promise<any> {
 	try {
+		// Check if API key is set
+		const apiKey = (store as any).get('geminiApiKey') as string | undefined;
+		if (!apiKey) {
+			console.log('API key not set, skipping scan');
+			return null;
+		}
+		
 		const globalWatchEnabled = (store as any).get('globalWatchEnabled', true) as boolean;
 		if (!globalWatchEnabled) {
 			return null;
@@ -387,9 +404,9 @@ async function runSanchesScan(): Promise<any> {
 		const sanchesPath = path.join(__dirname, '../sanches');
 		const projectPath = activeProject?.path || process.cwd();
 		
-		const { stdout, stderr } = await execAsync(sanchesPath, {
-			cwd: projectPath
-		});
+		// Execute Sanches CLI with --dir and --api flags
+		const command = `${sanchesPath} --dir "${projectPath}" --api "${apiKey}"`;
+		const { stdout, stderr } = await execAsync(command);
 		
 		if (stderr) {
 			console.error('Sanches CLI error:', stderr);
